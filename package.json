@@ -1,0 +1,15 @@
+{
+  "name": "omar-store",
+  "version": "1.0.0",
+  "description": "Omar Store - Sports Supplements E-commerce",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.5"
+  },
+  "devDependencies": {
+    "vercel": "^34.0.0"
+  }
+}

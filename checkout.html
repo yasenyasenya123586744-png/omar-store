@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إتمام الطلب</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #050505; color: white; min-height: 100vh; }
+        input, select, textarea { background: #111 !important; border: 1px solid #222 !important; color: white !important; transition: 0.3s; }
+        input:focus, textarea:focus { border-color: #eab308 !important; outline: none; box-shadow: 0 0 10px rgba(234, 179, 8, 0.1); }
+        .checkout-card { background: #0a0a0a; border: 1px solid #1a1a1a; }
+        
+        .watermark {
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; text-transform: uppercase; color: rgba(255, 255, 255, 0.1);
+            letter-spacing: 2px; pointer-events: none; z-index: 99;
+        }
+    </style>
+</head>
+<body class="pb-10">
+
+    <nav class="p-6 border-b border-white/5 mb-10">
+        <div class="container mx-auto">
+            <a href="index.html" class="text-3xl font-black italic text-yellow-500 tracking-wider">
+                OMAR <span class="text-white ml-1">STORE</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 max-w-4xl">
+        <div id="errorBanner" class="hidden mb-6 bg-red-950/80 border border-red-500/50 text-red-200 p-4 rounded-xl text-center font-bold">
+            يرجى تصحيح البيانات المدخلة قبل المتابعة.
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-10">
+            
+            <div class="lg:w-1/3 order-2 lg:order-1">
+                <div class="checkout-card p-6 rounded-[2rem] sticky top-24 space-y-4">
+                    <h2 class="text-xl font-black border-b border-white/5 pb-4 italic text-right">ملخص الطلب</h2>
+                    <div class="text-center">
+                        <img id="itemImg" src="" class="h-40 w-full object-contain mb-4 bg-black rounded-2xl p-4">
+                        <h3 id="itemName" class="text-lg font-bold text-yellow-500 mb-4">جاري التحميل...</h3>
+                        
+                        <div class="space-y-3 border-t border-white/5 pt-4 text-sm text-gray-400">
+                            <div class="flex justify-between">
+                                <span>سعر المنتج:</span>
+                                <span class="font-bold text-white"><span id="itemPrice">0</span> ج.م</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>تكلفة الشحن:</span>
+                                <span class="font-bold text-white"><span id="shippingCost">0</span> ج.م</span>
+                            </div>
+                            <div class="flex justify-between text-base border-t border-white/5 pt-3 text-white font-black">
+                                <span>الإجمالي الكلي:</span>
+                                <span class="text-yellow-500"><span id="totalPrice">0</span> ج.م</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-2/3 order-1 lg:order-2 space-y-6">
+                
+                <div class="checkout-card p-6 rounded-[2.5rem] border border-yellow-500/10 bg-gradient-to-r from-black via-[#080808] to-black">
+                    <h2 class="text-lg font-black text-yellow-500 mb-1 text-right">اكتب بياناتك باي طريقه وهتتحلل فورا </h2>
+                    <p class="text-gray-400 text-xs mb-4 text-right">استخراج تلقائي بواسطه الذكاء الاصطناعي.</p>
+                    
+                    <div class="space-y-3">
+                        <textarea id="aiInput" rows="2" class="w-full p-4 rounded-xl text-right text-sm resize-none bg-black" placeholder="اكتب بياناتك هنا..."></textarea>
+                        <button type="button" onclick="runAIFormParser()" class="w-full bg-yellow-500 text-black py-3 rounded-xl font-bold text-sm hover:bg-white transition duration-200 flex items-center justify-center gap-2">
+                            <span id="aiBtnSpinner" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                            <span>تمام بياناتي صحيحه</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="checkout-card p-8 rounded-[2.5rem]">
+                    <h1 class="text-2xl font-black mb-6 italic text-right">بيانات الشحن</h1>
+                    
+                    <form onsubmit="sendToWhatsApp(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-400 text-right">الاسم بالكامل</label>
+                            <input type="text" id="custName" oninput="validateNameInput()" required class="w-full p-4 rounded-xl text-right" placeholder="ادخل اسمك كاملاً">
+                            <p id="nameError" class="hidden text-red-500 text-xs mt-1.5 text-right font-medium">حط اسمك الثلاثي يكوتش.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-400 text-right">رقم الموبايل</label>
+                            <input type="tel" id="custPhone" oninput="validatePhoneInput()" required class="w-full p-4 rounded-xl text-left" dir="ltr" placeholder="01xxxxxxxxx">
+                            <p id="phoneError" class="hidden text-red-500 text-xs mt-1.5 text-right font-medium">حط رقم موبايلك الصحيح يكوتش.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-400 text-right">المحافظة</label>
+                            <input type="text" id="custGov" oninput="handleGovChange()" required class="w-full p-4 rounded-xl text-right" placeholder="اكتب اسم محافظتك هنا">
+                            <p id="govError" class="hidden text-red-500 text-xs mt-1.5 text-right font-medium">حط اسم المحافظة بشكل صحيح يكوتش.</p>
+                            
+                            <div id="predictedGovBadge" class="hidden mt-2 text-right transition-all duration-300">
+                                <span class="inline-flex items-center text-xs bg-yellow-500/10 text-yellow-500 py-1.5 px-3 rounded-lg border border-yellow-500/20 font-bold">
+                                    المحافظة المحددة شحنها: <span id="predictedGovName" class="mr-1 text-white">---</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-400 text-right">العنوان بالتفصيل</label>
+                            <input type="text" id="custAddress" required class="w-full p-4 rounded-xl text-right" placeholder="اكتب عنوانك كامل يكوتش (شارع، عمارة، رقم الشقة...)">  
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-gray-400 text-right">طريقة الدفع</label>
+                            <select id="payMethod" class="w-full p-4 rounded-xl text-right">
+                                <option value="دفع عند الاستلام">هدفع لما استلم</option>
+                                <option value="دفع الكتروني">انستا باي او فودافون كاش</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-yellow-500 text-black py-5 rounded-2xl font-black text-xl hover:bg-white hover:scale-[1.02] transition duration-300 shadow-xl shadow-yellow-500/10">
+                                تاكيد الاوردر ؟
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="watermark">Developed by: Yassin El-Sebaey Developer</div>
+
+    <script>
+        let baseProductPrice = 0;
+        let shippingCostAmount = 0;
+        let detectedGovText = "";
+
+        const egyptGovernorates = [
+            { name: "القاهرة", price: 95 }, { name: "الجيزة", price: 95 }, { name: "الإسكندرية", price: 50 },
+            { name: "أسوان", price: 150 }, { name: "الأقصر", price: 150 }, { name: "مطروح", price: 150 },
+            { name: "جنوب سيناء", price: 150 }, { name: "القليوبية", price: 110 }, { name: "الدقهلية", price: 110 },
+            { name: "الغربية", price: 110 }, { name: "الشرقية", price: 110 }, { name: "المنوفية", price: 110 },
+            { name: "دمياط", price: 110 }, { name: "البحيرة", price: 110 }, { name: "كفر الشيخ", price: 110 },
+            { name: "بورسعيد", price: 110 }, { name: "الإسماعيلية", price: 110 }, { name: "السويس", price: 110 },
+            { name: "الفيوم", price: 130 }, { name: "بني سويف", price: 130 }, { name: "المنيا", price: 130 },
+            { name: "أسيوط", price: 130 }, { name: "سوهاج", price: 130 }, { name: "قنا", price: 130 },
+            { name: "البحر الأحمر", price: 130 }, { name: "الوادي الجديد", price: 130 }, { name: "شمال سيناء", price: 130 }
+        ];
+
+        window.onload = function() {
+            let name = localStorage.getItem('selectedProduct') || "منتج تجريبي من عمر ستور";
+            let price = localStorage.getItem('selectedPrice') || "1500 ج.م";
+            let img = localStorage.getItem('selectedImg') || "https://i.ibb.co/3T9hFzV/1000294714.jpg";
+
+            document.getElementById('itemName').innerText = name;
+            document.getElementById('itemPrice').innerText = price;
+            document.getElementById('itemImg').src = img;
+            baseProductPrice = parseFloat(price.replace(/[^0-9.]/g, '')) || 0;
+            updateTotals();
+        };
+
+        // استدعاء السيرفر الداخلي المرفوع على Vercel بنجاح
+        async function fetchGeminiAIAnalysis(userText) {
+            const url = "/api/analyze"; 
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: userText })
+            });
+
+            if (!response.ok) {
+                throw new Error("معلش يبطل استني دقيقه وحاول تاني .");
+            }
+
+            return await response.json();
+        }
+
+        async function runAIFormParser() {
+            const aiInput = document.getElementById('aiInput').value.trim();
+            const btnSpinner = document.getElementById('aiBtnSpinner');
+            const errorBanner = document.getElementById('errorBanner');
+
+            if (!aiInput || aiInput.length < 5) {
+                errorBanner.innerText = "اكتب بياناتك كامله يكوتش.";
+                errorBanner.classList.remove('hidden');
+                return;
+            }
+
+            errorBanner.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const data = await fetchGeminiAIAnalysis(aiInput);
+
+                if (data.name) document.getElementById('custName').value = data.name;
+                if (data.phone) document.getElementById('custPhone').value = data.phone;
+                if (data.address) document.getElementById('custAddress').value = data.address;
+                
+                if (data.governorate) {
+                    document.getElementById('custGov').value = data.governorate;
+                    let match = egyptGovernorates.find(g => data.governorate.includes(g.name) || g.name.includes(data.governorate));
+                    if (match) {
+                        shippingCostAmount = match.price;
+                        detectedGovText = match.name;
+                        document.getElementById('predictedGovName').innerText = match.name;
+                        document.getElementById('predictedGovBadge').classList.remove('hidden');
+                    } else {
+                        shippingCostAmount = 110;
+                        detectedGovText = data.governorate;
+                    }
+                }
+
+                updateTotals();
+                validateNameInput();
+                validatePhoneInput();
+
+            } catch (error) {
+                errorBanner.innerText = "معلش يبطل استني دقيقه وحاول تاني .";
+                errorBanner.classList.remove('hidden');
+                console.error(error);
+            } finally {
+                btnSpinner.classList.add('hidden');
+            }
+        }
+
+        function handleGovChange() {
+            const govInput = document.getElementById('custGov').value.trim();
+            let match = egyptGovernorates.find(g => govInput.includes(g.name) || g.name.includes(govInput));
+            if (match) {
+                shippingCostAmount = match.price;
+                detectedGovText = match.name;
+                document.getElementById('predictedGovName').innerText = match.name;
+                document.getElementById('predictedGovBadge').classList.remove('hidden');
+            } else {
+                shippingCostAmount = 110;
+                detectedGovText = govInput;
+                document.getElementById('predictedGovBadge').classList.add('hidden');
+            }
+            updateTotals();
+        }
+
+        function updateTotals() {
+            document.getElementById('shippingCost').innerText = shippingCostAmount;
+            let total = baseProductPrice + shippingCostAmount;
+            document.getElementById('totalPrice').innerText = total >= 0 ? total : 0;
+        }
+
+        function validateNameInput() {
+            const nameVal = document.getElementById('custName').value.trim();
+            const nameError = document.getElementById('nameError');
+            if (nameVal.length >= 2) { nameError.classList.add('hidden'); return true; }
+            nameError.classList.remove('hidden'); return false;
+        }
+
+        function validatePhoneInput() {
+            const phoneVal = document.getElementById('custPhone').value.trim();
+            const phoneError = document.getElementById('phoneError');
+            if (/^(010|011|012|015)\d{8}$/.test(phoneVal)) { phoneError.classList.add('hidden'); return true; }
+            phoneError.classList.remove('hidden'); return false;
+        }
+
+        function sendToWhatsApp(event) {
+            event.preventDefault();
+            if (!validateNameInput() || !validatePhoneInput()) return;
+
+            const product = localStorage.getItem('selectedProduct') || "منتج من عمر ستور";
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const detailedAddress = document.getElementById('custAddress').value.trim();
+            const method = document.getElementById('payMethod').value;
+            const totalBill = baseProductPrice + shippingCostAmount;
+
+            const message = `🚨 *طلب جديد من OMAR STORE* 🚨\n\n` +
+                            `📦 *المنتج:* ${product}\n` +
+                            `💵 *السعر:* ${baseProductPrice} ج.م\n` +
+                            `🚚 *الشحن:* ${shippingCostAmount} ج.م\n` +
+                            `💰 *الإجمالي:* ${totalBill} ج.م\n\n` +
+                            `👤 *العميل:* ${name}\n` +
+                            `📞 *الموبايل:* ${phone}\n` +
+                            `📍 *المحافظة:* ${detectedGovText || document.getElementById('custGov').value}\n` +
+                            `🏡 *العنوان:* ${detailedAddress}\n` +
+                            `💳 *الدفع:* ${method}`;
+                            
+            window.open(`https://wa.me/201204761076?text=${encodeURIComponent(message)}`, '_blank');
+        }
+    </script>
+</body>
+</html>

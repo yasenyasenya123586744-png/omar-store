@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # OMAR STORE — Full Stack E-commerce
 
 Sports supplements store built with vanilla HTML/CSS/JS, Vercel Serverless Functions, Supabase (PostgreSQL), and Cloudinary.
@@ -183,3 +184,6 @@ Then open `http://localhost:3000`.
 ---
 
 *Dev: Yassin ElSeba3e*
+=======
+# omar-store
+>>>>>>> 80d2387bcbae526e3fabeae37fd90b3b296cc1e3

@@ -648,10 +648,13 @@ function doLogin() {
     else { document.getElementById('login-error').textContent='كلمة المرور غلط!'; document.getElementById('login-attempts').textContent=`محاولات متبقية: ${MAX_ATTEMPTS-loginAttempts}`; }
   }
 }
-function showApp() {
+async function showApp() {
   document.getElementById('login-screen').style.display='none';
   document.getElementById('admin-app').classList.add('visible');
-  loadCategories(); loadAllProducts(); loadReviews();
+  // Load categories first so selects are populated before products render
+  await loadCategories();
+  loadAllProducts();
+  loadReviews();
 }
 function doLogout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
 checkAuth();
@@ -703,7 +706,8 @@ async function api(method,path,body){
 /* ══════════════════════════════════════════════
    STATE
    ══════════════════════════════════════════════ */
-let allProducts=[],filteredProducts=[],allCategories=[],allReviews=[];
+// Declare ALL state variables at top before any function uses them
+var allProducts=[], filteredProducts=[], allCategories=[], allReviews=[];
 let currentFilter='all',currentPage=1;
 const PER_PAGE=10;
 let editingProductId=null,deletingProductId=null,addingImgProductId=null,deletingCatId=null,deletingRevId=null;
@@ -714,9 +718,8 @@ let newProductImageUrl=null,editProductImageUrl=null,addImgUrl=null;
    ══════════════════════════════════════════════ */
 async function loadCategories() {
   try {
-    // Load from localStorage (stored by admin) + built-in defaults
     const stored = JSON.parse(localStorage.getItem('omar_categories')||'null');
-    if (stored) {
+    if (stored && stored.length) {
       allCategories = stored;
     } else {
       allCategories = [
@@ -907,16 +910,12 @@ async function loadAllProducts() {
 }
 
 function updateStats() {
-  document.getElementById('stat-total').textContent    = allProducts.length;
-  document.getElementById('stat-cats').textContent     = allCategories.length;
-  document.getElementById('stat-reviews').textContent  = allReviews.length;
-  // Dynamic per category
-  const creatineCount = allProducts.filter(p=>p.type==='creatine').length;
-  const proteinCount  = allProducts.filter(p=>p.type==='protein').length;
-  const massCount     = allProducts.filter(p=>p.type==='mass').length;
-  document.getElementById('stat-creatine').textContent = creatineCount;
-  document.getElementById('stat-protein').textContent  = proteinCount;
-  document.getElementById('stat-mass').textContent     = massCount;
+  document.getElementById('stat-total').textContent   = (allProducts||[]).length;
+  document.getElementById('stat-cats').textContent    = (allCategories||[]).length;
+  document.getElementById('stat-reviews').textContent = (allReviews||[]).length;
+  document.getElementById('stat-creatine').textContent = (allProducts||[]).filter(p=>p.type==='creatine').length;
+  document.getElementById('stat-protein').textContent  = (allProducts||[]).filter(p=>p.type==='protein').length;
+  document.getElementById('stat-mass').textContent     = (allProducts||[]).filter(p=>p.type==='mass').length;
 }
 
 function renderRecentTable() {

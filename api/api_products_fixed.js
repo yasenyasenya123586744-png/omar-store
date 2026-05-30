@@ -6,7 +6,6 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -34,20 +33,23 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { name, type, price, image_url } = req.body;
+      const { name, type, price, image_url, discount_type, discount_value } = req.body;
 
+      // Basic validation — no hardcoded type list (supports custom categories)
       if (!name || !type || !price) {
         return res.status(400).json({ success: false, error: 'name, type, and price are required.' });
       }
 
-      const validTypes = ['creatine', 'protein', 'mass'];
-      if (!validTypes.includes(type)) {
-        return res.status(400).json({ success: false, error: 'type must be creatine, protein, or mass.' });
-      }
-
       const { data, error } = await supabase
         .from('products')
-        .insert([{ name, type, price: parseInt(price), image_url: image_url || null }])
+        .insert([{
+          name,
+          type,
+          price: parseInt(price),
+          image_url: image_url || null,
+          discount_type:  discount_type  || 'none',
+          discount_value: discount_value || 0
+        }])
         .select()
         .single();
 

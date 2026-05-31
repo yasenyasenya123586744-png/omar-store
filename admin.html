@@ -653,7 +653,7 @@ async function showApp() {
   document.getElementById('admin-app').classList.add('visible');
   // Load categories first so selects are populated before products render
   await loadCategories();
-  loadAllProducts();
+  await loadAllProducts();
   loadReviews();
 }
 function doLogout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
@@ -713,30 +713,18 @@ const PER_PAGE=10;
 let editingProductId=null,deletingProductId=null,addingImgProductId=null,deletingCatId=null,deletingRevId=null;
 let newProductImageUrl=null,editProductImageUrl=null,addImgUrl=null;
 
-/* ══════════════════════════════════════════════
-   CATEGORIES — CRUD
-   ══════════════════════════════════════════════ */
+/* ═══════════════════════
+   CATEGORIES — CRUD (Supabase via /api/categories)
+   ═══════════════════════ */
 async function loadCategories() {
   try {
-    const stored = JSON.parse(localStorage.getItem('omar_categories')||'null');
-    if (stored && stored.length) {
-      allCategories = stored;
-    } else {
-      allCategories = [
-        { id:'creatine', name:'كرياتين',  slug:'creatine' },
-        { id:'protein',  name:'بروتين',   slug:'protein'  },
-        { id:'mass',     name:'ماس جينر', slug:'mass'     },
-      ];
-      saveCategories();
-    }
+    const data = await api('GET', '/api/categories');
+    if (!data.success) throw new Error(data.error);
+    allCategories = data.categories || [];
     renderCategoriesTable();
     populateCategorySelects();
     updateStats();
   } catch(err){ toast('فشل تحميل الفئات: '+err.message,'error'); }
-}
-
-function saveCategories() {
-  localStorage.setItem('omar_categories', JSON.stringify(allCategories));
 }
 
 function renderCategoriesTable() {
@@ -746,7 +734,7 @@ function renderCategoriesTable() {
     return;
   }
   tbody.innerHTML = allCategories.map(cat => {
-    const count = allProducts.filter(p=>p.type===cat.slug||p.type===cat.id).length;
+    const count = allProducts.filter(p=>p.type===cat.slug).length;
     return `<tr>
       <td><strong>${cat.name}</strong></td>
       <td><code style="background:var(--surface);padding:2px 8px;border-radius:6px;font-size:.8rem">${cat.slug}</code></td>
@@ -766,7 +754,7 @@ function populateCategorySelects() {
     sel.innerHTML = id==='f-type' ? '<option value="">— اختر الفئة —</option>' : '';
     allCategories.forEach(cat=>{
       const opt=document.createElement('option');
-      opt.value=cat.slug||cat.id; opt.textContent=cat.name;
+      opt.value=cat.slug; opt.textContent=cat.name;
       sel.appendChild(opt);
     });
     if(current) sel.value=current;
@@ -780,7 +768,7 @@ function populateCategorySelects() {
       const btn=document.createElement('button');
       btn.className='filter-tab';
       btn.textContent=cat.name;
-      btn.onclick=function(){ applyFilter(cat.slug||cat.id, this); };
+      btn.onclick=function(){ applyFilter(cat.slug, this); };
       tabs.appendChild(btn);
     });
   }
@@ -800,13 +788,12 @@ async function submitAddCategory() {
   const btn=document.getElementById('btn-cat-submit');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
   try {
-    allCategories.push({ id:slug, name, slug });
-    saveCategories();
-    renderCategoriesTable();
-    populateCategorySelects();
-    updateStats();
+    const data = await api('POST', '/api/categories', { name, slug });
+    if (!data.success) throw new Error(data.error);
     document.getElementById('cat-name').value='';
     document.getElementById('cat-slug').value='';
+    delete document.getElementById('cat-slug').dataset.manual;
+    await loadCategories();
     toast('✓ تم إضافة الفئة — ستظهر في المتجر تلقائياً','success');
   } catch(err){ toast('خطأ: '+err.message,'error'); }
   finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> إضافة الفئة'; }
@@ -815,15 +802,23 @@ async function submitAddCategory() {
 let deletingCatSlug=null;
 function openDeleteCatModal(id,name){ deletingCatId=id; deletingCatSlug=id; document.getElementById('delete-cat-name').textContent=name; document.getElementById('delete-cat-modal').style.display=''; }
 function closeDeleteCatModal(e){ if(e&&e.target!==document.querySelector('#delete-cat-modal .modal-overlay'))return; document.getElementById('delete-cat-modal').style.display='none'; deletingCatId=null; }
-function confirmDeleteCat(){
-  allCategories=allCategories.filter(c=>c.id!==deletingCatId&&c.slug!==deletingCatId);
-  saveCategories();
-  renderCategoriesTable();
-  populateCategorySelects();
-  updateStats();
-  document.getElementById('delete-cat-modal').style.display='none';
-  toast('✓ تم حذف الفئة','success');
+async function confirmDeleteCat(){
+  const btn=document.getElementById('btn-delete-cat-confirm');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+  try {
+    // Try delete by UUID id first, fall back to slug
+    const catObj = allCategories.find(c=>c.id===deletingCatId||c.slug===deletingCatId);
+    if (!catObj) throw new Error('الفئة غير موجودة');
+    const data = await api('DELETE', `/api/categories/${catObj.id}`);
+    if (!data.success) throw new Error(data.error);
+    document.getElementById('delete-cat-modal').style.display='none';
+    deletingCatId=null;
+    await loadCategories();
+    toast('✓ تم حذف الفئة','success');
+  } catch(err){ toast('خطأ: '+err.message,'error'); }
+  finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-trash"></i> حذف الفئة'; }
 }
+
 
 /* ══════════════════════════════════════════════
    REVIEWS — CRUD (localStorage)

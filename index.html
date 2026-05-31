@@ -264,14 +264,17 @@ let allProducts  = [];
 let allCategories = [];
 let activeFilter = 'all';
 
-/* ══════════════════════════════════════
-   LOAD CATEGORIES from localStorage (set by admin)
-   ══════════════════════════════════════ */
-function loadCategories() {
-    const stored = localStorage.getItem('omar_categories');
-    if (stored) {
-        allCategories = JSON.parse(stored);
-    } else {
+/* ══════════════════════
+   LOAD CATEGORIES from /api/categories (Supabase)
+   ══════════════════════ */
+async function loadCategories() {
+    try {
+        const res  = await fetch('/api/categories');
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+        allCategories = json.categories || [];
+    } catch (err) {
+        console.error('Failed to load categories:', err);
         allCategories = [
             { id:'creatine', name:'كرياتين',  slug:'creatine' },
             { id:'protein',  name:'بروتين',   slug:'protein'  },
@@ -444,10 +447,12 @@ function saveAndGo(btn) {
     window.location.href = 'product.html';
 }
 
-/* ── Init ── */
-loadCategories();
-loadProducts();
-loadReviews();
+/* — Init — */
+(async () => {
+    await loadCategories();
+    await loadProducts();
+    loadReviews();
+})();
 </script>
 </body>
 </html>

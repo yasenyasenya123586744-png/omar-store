@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إشعار إداري - عمر ستور</title>
+    <!-- استدعاء مكتبة Tailwind CSS للتصميم -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* أنيميشن ظهور العناصر الانسيابي من الأسفل للأعلى */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* أنيميشن نبض التوهج الأخضر حول اللوجو باستخدام اللون المطلوب */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(0, 228, 19, 0.5), inset 0 0 10px rgba(0, 228, 19, 0.2);
+                border-color: rgba(0, 228, 19, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(0, 228, 19, 0.8), inset 0 0 20px rgba(0, 228, 19, 0.4);
+                border-color: rgba(0, 228, 19, 1);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .logo-glow {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+        
+        /* تأثير التدرج اللوني للنص (Gradient Text) يبدأ من اللون المطلوب */
+        .text-gradient {
+            background: linear-gradient(90deg, rgba(0,228,19,1) 0%, rgba(120,255,130,1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col items-center justify-center p-4 md:p-8 font-sans selection:bg-[#00e413] selection:text-black overflow-x-hidden">
+
+    <div class="animate-fade-in-up flex flex-col items-center w-full max-w-2xl text-center">
+        
+        <!-- حاوية اللوجو الدائرية مع التوهج الأخضر -->
+        <div class="w-36 h-36 rounded-full border-2 logo-glow flex items-center justify-center mb-10 overflow-hidden bg-zinc-950 p-1 relative">
+            <!-- استبدل "logo.png" بمسار أو رابط صورة لوجو عمر ستور الخاص بك -->
+            <img src="logo.jpeg" alt="عمر ستور" class="w-full h-full object-contain rounded-full relative z-10">
+        </div>
+
+        <!-- العنوان الرئيسي للموقع بتدرج لوني -->
+        <h1 class="text-3xl md:text-4xl font-bold tracking-wide mb-8 drop-shadow-[0_2px_15px_rgba(0,228,19,0.3)] text-gradient">
+            إشعار إداري
+        </h1>
+
+        <!-- مربع نص التنبيه الاحترافي (الشيك) -->
+        <div class="border border-[#00e413]/40 rounded-xl p-6 md:p-8 bg-zinc-950/60 backdrop-blur-md shadow-[0_0_25px_rgba(0,228,19,0.15)] max-w-xl mx-auto mb-10 relative overflow-hidden">
+            <!-- لمسة جمالية: خط علوي متدرج فوق المربع -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00e413] to-transparent opacity-80"></div>
+            
+            <p class="text-zinc-200 text-base md:text-lg leading-relaxed text-center select-none">
+                تم تعليق خدمات الموقع مؤقتاً لمراجعة تراخيص التشغيل وإجراء بعض التحديثات الإدارية. يُرجى من إدارة (عمر ستور) التواصل مع المطور المسؤول والدعم الفني لاستكمال الإجراءات وإعادة تفعيل النظام بشكل كامل.
+            </p>
+        </div>
+
+        <!-- زر التواصل مع الدعم الفني -->
+        <a href="https://wa.me/201061927815" target="_blank" 
+           class="w-full max-w-md block border border-[#00e413]/40 rounded-lg py-3.5 px-6 text-zinc-400 text-center text-base md:text-lg font-medium transition-all duration-300 hover:border-[#00e413] hover:text-[#00e413] hover:shadow-[0_0_20px_rgba(0,228,19,0.4)] bg-zinc-950/20 backdrop-blur-sm">
+            إدارة الموقع؟ اضغط للتواصل مع الدعم الفني
+        </a>
+
+    </div>
+
+</body>
+</html>

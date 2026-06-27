@@ -384,7 +384,7 @@ async function loadProducts() {
     container.innerHTML = `<p class="col-span-full text-center text-gray-400 py-10 font-bold animate-pulse">جارٍ تحميل المنتجات...</p>`;
     try {
         // الانتظار لمدة 5 ثوانٍ كاملة قبل جلب البيانات وعرضها
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        
 
         const res  = await fetch('/api/products');
         const json = await res.json();

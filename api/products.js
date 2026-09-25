@@ -21,15 +21,12 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const { type } = req.query;
-      let query = supabase
+      // Keep the read query compatible with the existing Supabase table schema.
+      // Filtering and ordering on optional columns can make the whole request
+      // fail, so the storefront fetches the complete list and filters locally.
+      const query = supabase
         .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (type && type !== 'all') {
-        query = query.eq('type', type);
-      }
+        .select('*');
 
       const { data, error } = await query;
       if (error) throw error;
@@ -37,6 +34,8 @@ export default async function handler(req, res) {
       // Add defaults for discount fields if missing
       const products = (data || []).map(p => ({
         ...p,
+        // Support both the current `type` column and older category naming.
+        type: p.type || p.category || p.category_slug || 'all',
         discount_type:  p.discount_type  || 'none',
         discount_value: p.discount_value || 0
       }));

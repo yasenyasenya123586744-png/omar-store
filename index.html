@@ -389,7 +389,10 @@ async function loadProducts() {
         const res  = await fetch('/api/products');
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
-        allProducts = json.products || [];
+        allProducts = (json.products || []).map(product => ({
+            ...product,
+            type: product.type || product.category || product.category_slug || 'all'
+        }));
         renderProducts(allProducts);
         document.querySelector('.tab-btn').classList.add('active');
     } catch (err) {
